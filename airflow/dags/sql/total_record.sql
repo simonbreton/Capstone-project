@@ -1,0 +1,1 @@
+$select=count(*)&$where= {{ task_instance.xcom_pull(task_ids='call_parameters', key='pickup_dimension_name') }} > '{{ execution_date.strftime("%Y-%m-%dT%H:%M:%S") }}' and {{ task_instance.xcom_pull(task_ids='call_parameters', key='pickup_dimension_name') }} < '{{ next_execution_date.strftime("%Y-%m-%dT%H:%M:%S") }}'
