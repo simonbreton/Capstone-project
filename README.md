@@ -73,36 +73,62 @@ Each log file contains multiple events.
 ---
 
 ### files:
-* *etl.py* : Script to extract, transform and load data
-* *DataQualityOperator.py* : ???
-* *SocrataQueryOperator.py* : ???
-* *SocrataQueryOperator.py* : ???
+* *elt.py* : extract, transform, load dag 
+* *SocrataToGCSOperator.py* : Custom operator to query Socrata API and pass result to Google Cloud Storage.
+* *SocrataQueryOperator.py* : Custom operator to query Socrata API with customised query.
+* *DataQualityOperator.py* : Custom oerator to run queries and test data quality.
 
 ### sql queries
-* *api_params.sql*: s3://udacity-dend/song_data
-* *bad_rows.sql*: s3://udacity-dend/log_data
-* *coordinate.sql*: s3://udacity-dend/log_data
-* *create_bad_row_table.sql*: s3://udacity-dend/log_data
-* *create_fact_table.sql*: s3://udacity-dend/log_data
-* *create_geo_table.sql*: s3://udacity-dend/log_data
-* *create_summary_table.sql*: s3://udacity-dend/log_data
-fact_query.sql
-insert_key.sql
-location.sql
-quality_check.sql
-quality_check_duplicate.sql
-summary.sql
-total_record.sql
+* *api_params.sql*: Templated query to filter desired output from Socrata API 
+* *bad_rows.sql*: Templated query to pass bad rows from raw data table to bad row table. 
+* *coordinate.sql*: Templated query to join geopoint data from raw data table with NYC taxi zones borough from Public NYC taxi zones table
+* *create_bad_row_table.sql*: create bad row table 
+* *create_fact_table.sql*: create fact table
+* *create_geo_table.sql*: create geo table
+* *create_summary_table.sql*: create summmary table
+* *fact_query.sql*: Templated query to insert data from raw table into fact table
+* *insert_key.sql*: Templated query to insert surrogate_keys into raw data table
+* *location.sql*: Templated query to join LocationID data from raw data table with NYC taxi zones borough from Public NYC taxi zones table
+* *quality_check.sql*: Templated query to count number of rows
+* *quality_check_duplicate.sql*: Templated query to check for duplicate
+* *summary.sql*: Templated query to insert summary data ready for analysis. 
+* *total_record.sql*: Template query to count the number of rows from API call
 
 
-## Project specifications, challenges and project delivery
+## Project specifications
 ---
 
-This project is similar to previous projects. The main difference is that we are using S3 as a source and destination. Data are extracted from S3, transformed with Spark and sent to S3 transformed. 
+Data are loaded retroactively for a defined period per day and per pagination as csv file into Google Cloud Storage. From there csv file are imported into a staging environement where data raw format is conserved. Data that fit the project goal are passed into a production table 
 
-* Data transformation is done with sql queries with pyspark.sql
-* Transformed data are sent to S3 following the star schema. 
-* Data type are handle with JSON schema when data are read from S3
+* Socrata API call is paginated, each pagination result is passed as a seperate file in Google Cloud Storage.
+* Socrata API call is filtered using SQL.
+* Data transformation is done with sql queries on BigQuery.
+* Transformed data are sent to a production table following the star schema. 
+* Data type are handle with predefined JSON schema to enfore consistency. 
+* Data Quality test and check ensure that every raw from the API call are passed in staging. 
+
+## Project rationale
+---
+
+### Airflow
+
+Airflow was the best option to move such big amount of data. Some core concept helped us to make our choice:
+
+Load data incrementally: As the NYC Yellow taxi cab entire data set is pretty big and spread out over 10 years of data I need a way to break it down into small chunk and load data incrementally. 
+
+Process historic data: Airflow is specifficaly designed historical data by giving the possibility of back-filling data way back to the start date. 
+
+Partition ingested data: Building the pipeline with Airflow was easy to partitioned data by date allowing us to more easily audit ETL process and optimise query performances. 
+
+Enforce deterministic properties: A function is said to be deterministic if for a given input, the output produced is always exactly the same. Examples of cases where behavior of a function can be non-deterministic:
+
+Execute conditionally: As data schema was complexe to handle (different for one year of data to another year) BranchPythonOperator allowed us to run different query with multiple path based on different data schema. 
+
+Rest data between tasks: This concept allowed us to build a reliable and tracable data piple. Data are stored at each step of their transformation. If anything is wrong, issues can be traced back throught log and table inspection. 
+
+### GCP
+
+I've experienced multiple cloud platform environement (Google, Amazon, Microsoft). For this project they all seems to be identical. I chose to work with the environement with which I had most familiarity. 
 
 ## Star Schema
 ---
@@ -158,16 +184,21 @@ dropoff_borough | no constraints | VARCHAR
 
 
 
-## ETL Process 
+## ELT Process 
 ---
 
-### Extract & Load
+### Extract
 
-Data are extracted from Socrate API and loaded into storage bucket
+Data are extracted from Socrata API and loaded into Google Cloud Storage bucket as csv file. all the data are stored into a root folder named "data". Inside this folder data are loaded following the folder structure Year / Month / Day. In the day folder each data per pagination (API call) 
+
+### Load
+
+Raw data are loading into a staging environement. The staging table is flexible allowing any data schema change and update. A surrogate key is added. 
 
 ### Transform
 
-Data are trasnformed and inserted into BigQuery following Star schema 
+Data from raw table are selected to fit a common schema in a production environement. Geopoint data and locationID are transformed to bourough to fit common language. 
+
 
 ## How to
 ---
