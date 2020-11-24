@@ -4,19 +4,16 @@
 ## Project Summary
 ---
 
-The goal of this project is to create an ETL pipeline to gather in one data set all the the yellow taxi trip record provided by the NYC Taxi and Limousine Commission (TLC). 
-This represent 10 years of data, billions of rows, multiple data models. This data set is growing every month as TLC Trip Record Data are updated on regular basis. 
-This data set could support analysis on NYC Yellow taxi cab over the last ten years such as price evolution, evolution of pick-up,drop-off popular area, evolution of timing etc...
+The goal of this project is to create an ETL pipeline to build a single source-of-truth database with all the the yellow taxi trip record provided by the NYC Taxi and Limousine Commission (TLC). This represent 10 years of data, billions of rows, multiple data models. This data set is growing every month as TLC Trip Record Data are updated on regular basis.
 
-
-## Data Sources
+## Data Source
 ---
 
-The data are available from NYC open data platform and from NYC taxi and limousine Comission
-https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page From the taxi and limousine data are access directly from aws  from a NYC open dat aplatform an API is available through socrata data 
-I chose to work with the socrata API has it gave me more flexibility 
+### Main Data Source Description 
 
-### Tables:
+The data are accessible from multiple sources. For this project I chose to access them from the The Socrata Open Data API (SODA). I chose SODA especially because it allowed me to break down this data in small chunck with a lot of flexibility. 
+
+### Detailed Main Data Source Tables:
 | Data Set Name | Public Page | API endpoint | Rows | Columns
 | ------- | ---------- | ----------- | ---- | ------- |
 | 2018 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2018-Yellow-Taxi-Trip-Data/t29m-gskq | https://data.cityofnewyork.us/resource/t29m-gskq.json | 112M | 17
@@ -30,21 +27,10 @@ I chose to work with the socrata API has it gave me more flexibility
 | 2009 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2009-Yellow-Taxi-Trip-Data/f9tw-8p66 | https://data.cityofnewyork.us/resource/f9tw-8p66.json | 112M | 17
 
 
-## Data Sources Description 
----
+### 2018 Yellow Taxi Trip detailed
 
-There was three main challenges working on this project and with this data sources:
+Here is an example of what a single trip looks like:	
 
-- the amount of data was huge. The socrata API instalble and I don't wanted to rely too much on physical memory. so i wanted to cut un small chuck of data with mean to have API call everyday
-- Shcema wasn't well described and was changing over time. so I had to find a way to reliable ELT this data 
-- As Schema wasn't realiable, it was particularly difficult to translate the geolocalisation point. 
-
-### 2018 Yellow Taxi Trip Data detailed
-
-The first dataset is a subset of real data from the Million Song Dataset. Each file is in JSON format and contains metadata about a song and the artist of that song.
-
-Here is an example of what a single song file looks like:	
-	
 `
 {
   "vendorid":2, //Number
@@ -67,7 +53,49 @@ Here is an example of what a single song file looks like:
 }
 `
 
-Each log file contains multiple events.
+### Additional Data Source
+
+nyc_taxi_zones
+
+| Columns |
+| ------- |
+| OBJECTID  | 
+| Shape_Leng  | 
+| the_geom |
+| Shape_Area |
+| zone |
+| LocationID |
+| borough |
+
+I used this small data set to unify New York Pickup and Dropoff Area accross all the trips recorded. 
+
+`
+{
+  "OBJECTID":1, //INTEGER
+  "Shape_Leng":0.116357453189, //FLOAT
+  "the_geom":"MULTIPOLYGON (((-74.18445299999996 40.694995999999904, -74.18448899999999 40.69509499999987, -74.18449799999996 40.69518499999987, -74.18438099999997 40.69587799999989, -74.18428199999994 40.6962109999999, -74.18402099999997 40.697074999999884, -74.18391299999996 40.69750699999986, -74.18375099999997 40.69779499999988, -74.18363399999998 40.6983259999999, -74.18356199999994 40.698451999999875, -74.18354399999998 40.69855999999988, -74.18350799999996 40.69870399999992, -74.18327399999998 40.70008999999988, -74.18315699999994 40.701214999999884, -74.18316599999997 40.702384999999886, -74.18313899999998 40.7026279999999, -74.18309399999998 40.7028529999999, -74.18299499999995 40.70315899999985, -74.18284199999994 40.70346499999989, -74.18264399999998 40.70373499999988, -74.18242799999996 40.70395099999992, -74.18220299999996 40.704139999999896, -74.18203199999994 40.70425699999987, -74.18180699999994 40.7043919999999, -74.18157299999996 40.70449999999988, -74.18132099999997 40.70460799999991, -74.18080799999996 …",	 //STRING
+  "Shape_Area":0.0007823067885,	 //FLOAT
+  "zone":"Newark Airport", //STRING
+  "LocationID":1,	//INTEGER
+  "borough":"EWR" //STRING
+}
+`
+
+Based on main data set output, pickup and dropoff zone are join based on LocationID or geom. 
+
+
+## Data Sources Challenges
+---
+
+There was one main challenge related to the data source:
+
+- Data Schema isn't well documented and some columns are changing over time. Some columns are renamed, some columns are deleted and replaced by others.
+
+This main challenge lead me to other smaller challenges:
+
+- Find a way to ingest all the data on daily basis without having to do any cleaning operation to ensure the quality of the ingestion. 
+- Clean the data set to be able to build a source-of-truth database.
+
 
 ## Repository overview
 ---
@@ -98,12 +126,12 @@ Each log file contains multiple events.
 ## Project specifications
 ---
 
-Data are loaded retroactively for a defined period per day and per pagination as csv file into Google Cloud Storage. From there csv file are imported into a staging environement where data raw format is conserved. Data that fit the project goal are passed into a production table 
+Data are loaded retroactively ("backfilled") on daily basis and per pagination as csv file into Google Cloud Storage. From there, csv files are imported into a staging environement in Big Query where raw data format (and schema) is conserved. From the staging table, columns consistent enough over time to build a single source-of-truth database are passed into a production table (in BigQuery too). 
 
-* Socrata API call is paginated, each pagination result is passed as a seperate file in Google Cloud Storage.
-* Socrata API call is filtered using SQL.
+* Socrata API request is paginated. Each pagination result is passed as a seperate csv file in Google Cloud Storage.
+* Socrata API request is filtered using SQL.
 * Data transformation is done with sql queries on BigQuery.
-* Transformed data are sent to a production table following the star schema. 
+* Transformed data are sent to a production table following a model that helped me to more easily build a single source-of-truth database. 
 * Data type are handle with predefined JSON schema to enfore consistency. 
 * Data Quality test and check ensure that every raw from the API call are passed in staging. 
 
@@ -130,14 +158,17 @@ Rest data between tasks: This concept allowed us to build a reliable and tracabl
 
 I've experienced multiple cloud platform environement (Google, Amazon, Microsoft). For this project they all seems to be identical. I chose to work with the environement with which I had most familiarity. 
 
-## Star Schema
+## Data model
 ---
 
 ### Description
 
-*section copied from previous project data modeling* 
+The database schema used in this project is the Star Schema. One table (fact table) contains all the measures of each events. 1 dimension tables contain dimension of measures in the Fact table. Each dimension table is linked to the fact table with their surrogate_keys.
 
-The database schema used in this project is the Star Schema. One table (fact table) contains all the measures of each events. 4 dimension tables contain dimension of measures in the Fact table. Each dimension table is linked to the fact table with their PRIMARY KEY.
+Step 3: Define the Data Model
+
+Map out the conceptual data model and explain why you chose that model
+List the steps necessary to pipeline the data into the chosen data model
 
 
 ### Advantage of Star Schema
@@ -183,7 +214,6 @@ dropoff_zone | no constraints | VARCHAR
 dropoff_borough | no constraints | VARCHAR
 
 
-
 ## ELT Process 
 ---
 
@@ -200,6 +230,13 @@ Raw data are loading into a staging environement. The staging table is flexible 
 Data from raw table are selected to fit a common schema in a production environement. Geopoint data and locationID are transformed to bourough to fit common language. 
 
 
+## Update data set
+
+Data can be upated as soon as new data are available. However data are made available usually over a month or 6 months period, which mean that daily data should be ingested backfilled. And again here is using the Socrate API it is best to chose daily backfill update to ensure consistency, reliabibly and respect the Airflow concepts and phylisophy. 
+
+## Accessing Data set
+
+
 ## How to
 ---
 
@@ -211,40 +248,3 @@ cf. run airflow
 * [Markdown guide](https://www.markdownguide.org/basic-syntax/)
 * [Project specifications](https://review.udacity.com/#!/rubrics/2501/view)
 
-Step 1: Scope the Project and Gather Data
-
-Since the scope of the project will be highly dependent on the data, these two things happen simultaneously. In this step, you’ll:
-
-Identify and gather the data you'll be using for your project (at least two sources and more than 1 million rows). See Project Resources for ideas of what data you can use.
-Explain what end use cases you'd like to prepare the data for (e.g., analytics table, app back-end, source-of-truth database, etc.)
-
-Step 2: Explore and Assess the Data
-
-Explore the data to identify data quality issues, like missing values, duplicate data, etc.
-Document steps necessary to clean the data
-
-Step 3: Define the Data Model
-
-Map out the conceptual data model and explain why you chose that model
-List the steps necessary to pipeline the data into the chosen data model
-
-Step 4: Run ETL to Model the Data
-
-Create the data pipelines and the data model
-Include a data dictionary
-Run data quality checks to ensure the pipeline ran as expected
-Integrity constraints on the relational database (e.g., unique key, data type, etc.)
-Unit tests for the scripts to ensure they are doing the right thing
-Source/count checks to ensure completeness
-
-Step 5: Complete Project Write Up
-
-What's the goal? What queries will you want to run? How would Spark or Airflow be incorporated? Why did you choose the model you chose?
-Clearly state the rationale for the choice of tools and technologies for the project.
-Document the steps of the process.
-Propose how often the data should be updated and why.
-Post your write-up and final data model in a GitHub repo.
-Include a description of how you would approach the problem differently under the following scenarios:
-If the data was increased by 100x.
-If the pipelines were run on a daily basis by 7am.
-If the database needed to be accessed by 100+ people.
