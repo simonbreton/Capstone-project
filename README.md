@@ -234,17 +234,3 @@ Data from raw table are selected to fit a common schema in a production environe
 
 Data can be upated as soon as new data are available. However data are made available usually over a month or 6 months period, which mean that daily data should be ingested backfilled. And again here is using the Socrate API it is best to chose daily backfill update to ensure consistency, reliabibly and respect the Airflow concepts and phylisophy. 
 
-## Accessing Data set
-
-
-## How to
----
-
-cf. run airflow
-
-## Ressources
----
-
-* [Markdown guide](https://www.markdownguide.org/basic-syntax/)
-* [Project specifications](https://review.udacity.com/#!/rubrics/2501/view)
-
