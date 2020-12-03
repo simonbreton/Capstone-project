@@ -4,30 +4,32 @@
 ## Project Summary
 ---
 
-The goal of this project is to create an ETL pipeline to build a single source-of-truth database with all the the yellow taxi trip record provided by the NYC Taxi and Limousine Commission (TLC). This represent 10 years of data, billions of rows, multiple data models. This data set is growing every month as TLC Trip Record Data are updated on regular basis.
+The goal of this project is to create an ETL pipeline to build a single source-of-truth database with all the the yellow taxi trip record provided by the NYC Taxi and Limousine Commission (TLC). This represent 10 years of data, billions of rows, multiple data models. This data set is growing every month as TLC Trip Record Data are updated on regular basis. Only data available across all these years of data are available in this single source-of-truth database. The production data is composed of two main tables; a fact table and a dimension table containing pick-up and drop-off geograpgical zone.
 
-## Data Source
+## Data Sources
 ---
 
 ### Main Data Source Description 
 
-The data are accessible from multiple sources. For this project I chose to access them from the The Socrata Open Data API (SODA). I chose SODA especially because it allowed me to break down this data in small chunck with a lot of flexibility. 
+Yellow taxi trip record are accessible from multiple sources. For this project I chose to access them from The Socrata Open Data API (SODA). I chose SODA especially because it allowed me to break down this data in small chunck with a lot of flexibility thanks to SoQL statements that are similar to clauses in SQL statements.
 
-### Detailed Main Data Source Tables:
+#### Detailed Main Data Source Tables:
 | Data Set Name | Public Page | API endpoint | Rows | Columns
 | ------- | ---------- | ----------- | ---- | ------- |
+| 2020 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2020-Yellow-Taxi-Trip-Data-January-June-/kxp8-n2sj | https://data.cityofnewyork.us/resource/kxp8-n2sj.json | 16.8M | 18
+2019 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2019-Yellow-Taxi-Trip-Data/2upf-qytp | https://data.cityofnewyork.us/resource/2upf-qytp.json | 84.4M | 18
 | 2018 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2018-Yellow-Taxi-Trip-Data/t29m-gskq | https://data.cityofnewyork.us/resource/t29m-gskq.json | 112M | 17
-| 2017 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2017-Yellow-Taxi-Trip-Data/biws-g3hs | https://data.cityofnewyork.us/resource/biws-g3hs.json | 112M | 17
-| 2016 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2016-Yellow-Taxi-Trip-Data/k67s-dv2t | https://data.cityofnewyork.us/resource/uacg-pexx.json | 112M | 17
-| 2015 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2015-Yellow-Taxi-Trip-Data/ba8s-jw6u | https://data.cityofnewyork.us/resource/2yzn-sicd.json | 112M | 17
-| 2014 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2013-Yellow-Taxi-Trip-Data/7rnv-m532 | https://data.cityofnewyork.us/resource/gkne-dk5s.json | 112M | 17
-| 2013 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2018-Yellow-Taxi-Trip-Data/t29m-gskq | https://data.cityofnewyork.us/resource/t7ny-aygi.json | 112M | 17
-| 2012 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2012-Yellow-Taxi-Trip-Data/fd5y-xikb | https://data.cityofnewyork.us/resource/kerk-3eby.json | 112M | 17
-| 2011 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2011-Yellow-Taxi-Trip-Data/jr6k-xwua | https://data.cityofnewyork.us/resource/uwyp-dntv.json | 112M | 17
-| 2009 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2009-Yellow-Taxi-Trip-Data/f9tw-8p66 | https://data.cityofnewyork.us/resource/f9tw-8p66.json | 112M | 17
+| 2017 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2017-Yellow-Taxi-Trip-Data/biws-g3hs | https://data.cityofnewyork.us/resource/biws-g3hs.json | 113M | 17
+| 2016 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2016-Yellow-Taxi-Trip-Data/k67s-dv2t | https://data.cityofnewyork.us/resource/uacg-pexx.json | 131M | 17
+| 2015 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2015-Yellow-Taxi-Trip-Data/ba8s-jw6u | https://data.cityofnewyork.us/resource/2yzn-sicd.json | 146M | 17
+| 2014 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2014-Yellow-Taxi-Trip-Data/gn7m-em8n | https://data.cityofnewyork.us/resource/gkne-dk5s.json | 165M | 17
+| 2013 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2013-Yellow-Taxi-Trip-Data/7rnv-m532 | https://data.cityofnewyork.us/resource/t7ny-aygi.json | 173M | 17
+| 2012 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2012-Yellow-Taxi-Trip-Data/fd5y-xikb | https://data.cityofnewyork.us/resource/kerk-3eby.json | 166M | 17
+| 2011 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2011-Yellow-Taxi-Trip-Data/jr6k-xwua | https://data.cityofnewyork.us/resource/uwyp-dntv.json | 135M | 20
+| 2009 Yellow Taxi Trip Data  | https://data.cityofnewyork.us/Transportation/2009-Yellow-Taxi-Trip-Data/f9tw-8p66 | https://data.cityofnewyork.us/resource/f9tw-8p66.json | 171M | 20
 
 
-### 2018 Yellow Taxi Trip detailed
+#### 2018 Yellow Taxi Trip detailed
 
 Here is an example of what a single trip looks like:	
 
@@ -55,7 +57,11 @@ Here is an example of what a single trip looks like:
 
 ### Additional Data Source
 
-nyc_taxi_zones
+#### New York Taxi Zones data set
+
+I used this small data set to unify Pickup and Dropoff Area accross all the trips recorded. This data set allowed me to match pickup and dropoff depending on when location id or geo point where available.
+
+#### Data set description
 
 | Columns |
 | ------- |
@@ -67,7 +73,7 @@ nyc_taxi_zones
 | LocationID |
 | borough |
 
-I used this small data set to unify New York Pickup and Dropoff Area accross all the trips recorded. 
+#### Detailed row description
 
 `
 {
@@ -81,21 +87,10 @@ I used this small data set to unify New York Pickup and Dropoff Area accross all
 }
 `
 
-Based on main data set output, pickup and dropoff zone are join based on LocationID or geom. 
-
-
 ## Data Sources Challenges
 ---
 
-There was one main challenge related to the data source:
-
-- Data Schema isn't well documented and some columns are changing over time. Some columns are renamed, some columns are deleted and replaced by others.
-
-This main challenge lead me to other smaller challenges:
-
-- Find a way to ingest all the data on daily basis without having to do any cleaning operation to ensure the quality of the ingestion. 
-- Clean the data set to be able to build a source-of-truth database.
-
+There was one main challenge related to the data source. Data Schema isn't well documented across the year and is changing over time. Some columns were renamed, some columns were deleted or added fron one year to another. I wanted to keep the integrety of the data set as long as possible in my ETL process. The staging is flexiblable enough to ingest data without defined schema and this allow to handle data schema modification.
 
 ## Repository overview
 ---
@@ -104,7 +99,7 @@ This main challenge lead me to other smaller challenges:
 * *elt.py* : extract, transform, load dag 
 * *SocrataToGCSOperator.py* : Custom operator to query Socrata API and pass result to Google Cloud Storage.
 * *SocrataQueryOperator.py* : Custom operator to query Socrata API with customised query.
-* *DataQualityOperator.py* : Custom oerator to run queries and test data quality.
+* *DataQualityOperator.py* : Custom operator to run queries and test data quality.
 
 ### sql queries
 * *api_params.sql*: Templated query to filter desired output from Socrata API 
@@ -126,10 +121,10 @@ This main challenge lead me to other smaller challenges:
 ## Project specifications
 ---
 
-Data are loaded retroactively ("backfilled") on daily basis and per pagination as csv file into Google Cloud Storage. From there, csv files are imported into a staging environement in Big Query where raw data format (and schema) is conserved. From the staging table, columns consistent enough over time to build a single source-of-truth database are passed into a production table (in BigQuery too). 
+Data are loaded retroactively ("backfilled") on daily basis per pagination as csv file into Google Cloud Storage. From there, csv files are imported into a staging environement in Big Query where raw data format (and schema) is conserved. From the staging table, columns consistent enough over time to build a single source-of-truth database are passed into a production fact table (in BigQuery too). In the meantime, geo data point and location ID (depending on the data set schema) are tranformed into Zone and passed into a production dimension table.
 
 * Socrata API request is paginated. Each pagination result is passed as a seperate csv file in Google Cloud Storage.
-* Socrata API request is filtered using SQL.
+* Socrata API request is filtered using SoQL.
 * Data transformation is done with sql queries on BigQuery.
 * Transformed data are sent to a production table following a model that helped me to more easily build a single source-of-truth database. 
 * Data type are handle with predefined JSON schema to enfore consistency. 
@@ -140,36 +135,28 @@ Data are loaded retroactively ("backfilled") on daily basis and per pagination a
 
 ### Airflow
 
-Airflow was the best option to move such big amount of data. Some core concept helped us to make our choice:
+Airflow was the best option to move such big amount of data. Some core concept helped me to better approache this project:
 
-Load data incrementally: As the NYC Yellow taxi cab entire data set is pretty big and spread out over 10 years of data I need a way to break it down into small chunk and load data incrementally. 
+**Load data incrementally**: As the NYC Yellow taxi cab entire data set is pretty big and spread out over 10 years of data I need a way to break it down into small chunk and load data incrementally. 
 
-Process historic data: Airflow is specifficaly designed historical data by giving the possibility of back-filling data way back to the start date. 
+**Process historic data**: Airflow is specificaly designed to process historical data by giving the possibility of back-filling data way back to the start date. 
 
-Partition ingested data: Building the pipeline with Airflow was easy to partitioned data by date allowing us to more easily audit ETL process and optimise query performances. 
+**Partition ingested data**: Building the pipeline with Airflow was easy to partitioned data by date allowing me to more easily audit ETL process and optimise query performances. 
 
-Enforce deterministic properties: A function is said to be deterministic if for a given input, the output produced is always exactly the same. Examples of cases where behavior of a function can be non-deterministic:
+**Execute conditionally**: As data schema was complexe to handle (different for one year of data to another year) BranchPythonOperator allowed me to run different query with multiple path based on different data schema. 
 
-Execute conditionally: As data schema was complexe to handle (different for one year of data to another year) BranchPythonOperator allowed us to run different query with multiple path based on different data schema. 
-
-Rest data between tasks: This concept allowed us to build a reliable and tracable data piple. Data are stored at each step of their transformation. If anything is wrong, issues can be traced back throught log and table inspection. 
+**Rest data between tasks**: This concept allowed me to build a reliable and tracable data pipeline. Data are stored at each step of their transformation. If anything is wrong, issues can be traced back throught log and table inspection. 
 
 ### GCP
 
-I've experienced multiple cloud platform environement (Google, Amazon, Microsoft). For this project they all seems to be identical. I chose to work with the environement with which I had most familiarity. 
+I've experienced multiple cloud platform environement (Google, Amazon, Microsoft). I chose to work with the environement with which I had most familiarity. 
 
 ## Data model
 ---
 
 ### Description
 
-The database schema used in this project is the Star Schema. One table (fact table) contains all the measures of each events. 1 dimension tables contain dimension of measures in the Fact table. Each dimension table is linked to the fact table with their surrogate_keys.
-
-Step 3: Define the Data Model
-
-Map out the conceptual data model and explain why you chose that model
-List the steps necessary to pipeline the data into the chosen data model
-
+The database schema used in this project is a simple Star Schema with one fact table and a dimenson table. Each row is each table is linked with a surrogate key generated in the staging environement. The fact and the dimension table are feed from the staging table. The dimension table also contains data from the additiona data source.
 
 ### Advantage of Star Schema
 
@@ -185,29 +172,21 @@ Here are the main benefits of Star Schema:
 
 #### Fact Table
 
-##### songplays
-
-records in log data associated with song plays i.e. records with page NextSong
-
 | Columns      | Constraints   | Type  | 
 | ------------ | ------------- | ----- |
 | surrogate_keys | PRIMARY KEY NOT NULL | SERIAL
-| partitioned_key | REFERENCES time(start_time) | TIMESTAMP
-| pickup_datetime | REFERENCES users(user_id) | VARCHAR
+| partitioned_key | no constraints | TIMESTAMP
+| pickup_datetime | no constraints | VARCHAR
 | passenger_count | no constraints | VARCHAR
-| trip_distance | REFERENCES songs(song_id) | VARCHAR
-| payment_type | REFERENCES artists(artist_id) | VARCHAR
+| trip_distance | no constraints | VARCHAR
+| payment_type | no constraints | VARCHAR
 | total_amount | no constraints | INT
 
-#### Dimension Tables
-
-##### users
-
-Users in the app
+#### Dimension Table
 
 Columns      | Constraints   | Type  | 
 ------------ | ------------- | ----- |
-surrogate_keys | PRIMARY KEY NOT NULL | VARCHAR
+surrogate_keys | PRIMARY KEY NOT NULL | SERIAL
 pickup_zone | no constraints | VARCHAR
 pickup_borough | no constraints | VARCHAR
 dropoff_zone | no constraints | VARCHAR
@@ -219,18 +198,17 @@ dropoff_borough | no constraints | VARCHAR
 
 ### Extract
 
-Data are extracted from Socrata API and loaded into Google Cloud Storage bucket as csv file. all the data are stored into a root folder named "data". Inside this folder data are loaded following the folder structure Year / Month / Day. In the day folder each data per pagination (API call) 
+Data are extracted from Socrata API and loaded into Google Cloud Storage bucket as csv file. All the data are stored into a root folder named "data". Inside this folder data are loaded following the folder structure Year / Month / Day.
 
 ### Load
 
-Raw data are loading into a staging environement. The staging table is flexible allowing any data schema change and update. A surrogate key is added. 
+Raw data are loading into a staging environement. The staging table is flexible allowing any data schema change. A surrogate key is generated. 
 
 ### Transform
 
-Data from raw table are selected to fit a common schema in a production environement. Geopoint data and locationID are transformed to bourough to fit common language. 
+Data from raw table are selected to fit a common schema in a production environement. Geopoint data and locationID are transformed to zone.
 
-
-## Update data set
+### Update data set
 
 Data can be upated as soon as new data are available. However data are made available usually over a month or 6 months period, which mean that daily data should be ingested backfilled. And again here is using the Socrate API it is best to chose daily backfill update to ensure consistency, reliabibly and respect the Airflow concepts and phylisophy. 
 
