@@ -212,3 +212,23 @@ Data from raw table are selected to fit a common schema in a production environe
 
 Data can be upated as soon as new data are available. However data are made available usually over a month or 6 months period, which mean that daily data should be ingested backfilled. And again here is using the Socrate API it is best to chose daily backfill update to ensure consistency, reliabibly and respect the Airflow concepts and phylisophy. 
 
+## Specific scenarios
+---
+
+###The data was increased by 100x
+
+Data would be stored the same way however it would be necessary to have extra production table prepared for specific purpose.
+
+###The pipelines would be run on a daily basis by 7 am every day.
+
+The pipeline is already set to run on daily basis. If the dag fail and need to be re-run depending on where the dag fails the final production table could be impacted. Duplicate surrogate keys will need to be removed or filtered out.
+
+###The database needed to be accessed by 100+ people.
+
+It would be easy to open access to 100+ people with Google Cloud Console access management however it could become costly very quickly. The best way to share these data would be to build a dashboard with aggregated data, preformated to answer specific questions (in order to avoid too many read operations)
+
+## Choice of tools, technologies, and data model
+---
+
+The data model chosen for this project was made for analytics purpose. Fact table can be easily join with dimension table. Answers like the numbers of daily trip, the avg cost of trip, the evolution of trips over time, the average number of passemgers, the hottest pickup and drop-off zone... could be easily answered with the final production table.
+
